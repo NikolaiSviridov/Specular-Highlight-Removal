@@ -1,0 +1,43 @@
+Author: Robby T. Tan (tanrobby -ad- gmail.com)
+Release Date: December 12, 2007
+
+* Copyright:
+-----------
+Copyright and all rights therein are retained by authors 
+or by other copyright holders. All persons copying this 
+information are expected to adhere to the terms and constraints 
+invoked by each author's copyright. 
+
+Published reports of research using this code 
+(or a modified version) should cite the article 
+that describes the algorithm: 
+
+Separating reflection components of textured surfaces using a single image,
+Robby T. Tan, Katsushi Ikeuchi,
+IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI),
+27(2), pp.179-193, February, 2005
+
+
+* Notes:
+--------
+The code is provided as is, with no guarantees. 
+Comments and bug reports are welcome. 
+While the code is not strictly supported, 
+it is documented through the related publications.
+And importantly, it may be used for non-commercial use only.
+
+
+* TO DO:
+--------
+Requirements:
+* cmake (only if you like to use it)
+* ppm format image files (thanks to Pedro Felzenszwalb, University of Chicago)
+
+Compilation:
+1. cmake CMakeList.txt
+2. make
+3. ./highlight img/head.ppm
+
+Compatability:
+* I have compiled the code in linux, mac osx, and windows (cygwin and VC++)
+  without any problems.
