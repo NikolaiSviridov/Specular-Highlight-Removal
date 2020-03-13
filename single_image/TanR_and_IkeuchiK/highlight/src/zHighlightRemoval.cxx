@@ -50,14 +50,21 @@ int zHighlightRemoval::zRemoveHighlights(zArray2D<s_rgbi> &img,
     zArray2D<s_rgbi> src;
     src.zCopyIn(img);
 
-    while (epsilon >= 0.0) {
+    int n = 0;
+
+//    while (epsilon >= 0.0) {
         // run the main iteration
         printf("*");
-        zIteration(src, sfi, epsilon);
+//        if (n % 10 == 0) {
+            zIteration(src, sfi, epsilon, true, n);
+//        } else {
+//            zIteration(src, sfi, epsilon, false, 0);
+//        }
         epsilon -= step;
         printf(": %f\n", epsilon);
+        ++n;
         //zWriteImage(src,"iteration.ppm");
-    }
+//    }
 
     diff.zCopyIn(src);
     return 0;
@@ -118,16 +125,27 @@ int zHighlightRemoval::zSpecularFreeImage(zArray2D<s_rgbi> &src,
 }
 
 int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
-                                  float epsilon) {
+                                  float epsilon, bool save, int n) {
     int x, y;
 
     float thR = 0.1f, thG = 0.1f;
 
+    char buf[12];
+
     // to have the initial labels
     int count = zInit(src, sfi, epsilon);
     int pcount;
+    zArray2D<s_rgbi> before;
+
+
+
 
     while (1) {
+        before.zCopyIn(src);
+
+        clean(before);
+
+        n += 1;
         printf(".");
         for (y = 0; y < src.zGetMaxY() - 1; y++) {
             for (x = 0; x < src.zGetMaxX() - 1; x++) {
@@ -153,12 +171,16 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                     //if it is  a boundary in the x direction
                     if (fabs(drx) > thR && fabs(dgx) > thG) { //pixel right
                         src(y, x).i = BOUNDARY;
+
+//                        before(y, x).i = BOUNDARY;
                         continue;
                     }
 
                     //if it is a noise
                     if (fabs(src(y, x).zMaxChroma() - src(y, x + 1).zMaxChroma()) < 0.01) {
                         src(y, x).i = NOISE;
+
+//                        before(y, x).i = NOISE;
                         continue;
                     }
 
@@ -172,18 +194,25 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                         src(y, x).i = DIFFUSE;
                         src(y, x + 1).i = DIFFUSE;
                     }
+
+                    before(y, x).i = SPECULARX;
+                    before(y, x + 1).i = SPECULARX;
                 }
 
                 if (src(y, x).i == SPECULARY) {
                     //if it is a boundary in the y direction
                     if (fabs(dry) > thR && fabs(dgy) > thG) { //pixel right
                         src(y, x).i = BOUNDARY;
+
+//                        before(y, x).i = BOUNDARY;
                         continue;
                     }
 
                     //if it is a noise
                     if (fabs(src(y, x).zMaxChroma() - src(y + 1, x).zMaxChroma()) < 0.01) {
                         src(y, x).i = NOISE;
+
+//                        before(y, x).i = NOISE;
                         continue;
                     }
 
@@ -197,17 +226,41 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                         src(y, x).i = DIFFUSE;
                         src(y + 1, x).i = DIFFUSE;
                     }
+
+                    before(y, x).i = SPECULARY;
+                    before(y + 1, x).i = SPECULARY;
                 }
             }
         }
         pcount = count;
         count = zInit(src, sfi, epsilon);
-        //::zShow(src);
+        snprintf(buf, 12, "%d_s.ppm", n);
+        save_needed(before, true, buf);
+//        ::zShow(src);
         if (count < 0)
             break;
         if (pcount <= count)
             break;
     }
+//    if (save) {
+//        snprintf(buf, 12, "%d_b.ppm", n);
+//        save_needed(before, false, buf);
+//
+//        snprintf(buf, 12, "%d_s.ppm", n);
+//        save_needed(before, true, buf);
+//
+//        snprintf(buf, 12, "%d.ppm", n);
+//        ::zWriteImage(src, buf);
+//
+//        snprintf(buf, 12, "%d_ss.ppm", n);
+//        save_needed(src, true, buf);
+//
+////        snprintf(buf, 12, "%d_0_5s.ppm", n);
+////        zInit(src, sfi, 0.5f);
+////        save_needed(src, true, buf);
+//    }
+
+
     zResetLabels(src);
 
     return 0;
@@ -301,4 +354,40 @@ int zHighlightRemoval::zResetLabels(zArray2D<s_rgbi> &src) {
         }
     }
     return 0;
+}
+
+void zHighlightRemoval::save_needed(zArray2D<s_rgbi> &src, bool mark, string name) {
+    zArray2D<s_rgbi> output;
+
+    output.zCopyIn(src);
+    for (int y = 0; y < src.zGetMaxY() - 1; y++) {
+        for (int x = 0; x < src.zGetMaxX() - 1; x++) {
+            if (mark) {
+                if (src(y, x).i == SPECULARY || src(y, x).i == SPECULARX) {
+//                if (src(y, x).i == DIFFUSE) {
+                    output(y, x).r = 51;
+                    output(y, x).g = 255;
+                    output(y, x).b = 51;
+                }
+            } else {
+                if (src(y, x).i == BOUNDARY) {
+                    output(y, x).r = 51;
+                    output(y, x).g = 255;
+                    output(y, x).b = 51;
+                }
+            }
+        }
+    }
+
+    ::zWriteImage(output, name);
+
+}
+
+void zHighlightRemoval::clean(zArray2D<s_rgbi> &src) {
+    for (int y = 0; y < src.zGetMaxY() - 1; y++) {
+        for (int x = 0; x < src.zGetMaxX() - 1; x++) {
+            src(y, x).i = 0;
+        }
+    }
+
 }

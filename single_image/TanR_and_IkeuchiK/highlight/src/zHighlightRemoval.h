@@ -16,26 +16,25 @@
 
 #include "zGlobal.h"
 
-class zHighlightRemoval {
+class zHighlightRemoval 
+{
+  
+ protected:
+  int zRemoveHighlights(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
+  int zSpecularFreeImage(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
 
-protected:
-    int zRemoveHighlights(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
+  int zResetLabels(zArray2D<s_rgbi> &src);
+  int zSpecular2Diffuse(s_rgbi &iro, float maxChroma);
+  int zInit(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi, float epsilon);
+  int zIteration(zArray2D<s_rgbi> &src,zArray2D<s_rgbi> &sfi, float epsilon, bool save, int n);
 
-    int zSpecularFreeImage(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
+  void save_needed(zArray2D<s_rgbi> &src, bool mark, string name);
+  void clean(zArray2D<s_rgbi> &src);
 
-    int zResetLabels(zArray2D<s_rgbi> &src);
-
-    int zSpecular2Diffuse(s_rgbi &iro, float maxChroma);
-
-    int zInit(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi, float epsilon);
-
-    int zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi, float epsilon);
-
-public:
-    zHighlightRemoval(char *fname);
-
-    virtual ~zHighlightRemoval();
-
+ public:
+  zHighlightRemoval(char *fname);
+  virtual ~zHighlightRemoval();
+  
 };
 
 #endif 
