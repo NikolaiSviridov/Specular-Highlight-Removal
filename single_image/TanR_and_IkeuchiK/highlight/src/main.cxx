@@ -9,7 +9,6 @@ int main(int argc, char *argv[]) {
 //    printf("syntax error: highlight <filename>\n");
 //  }
 
-//    zHighlightRemoval("../images/fish.ppm");
-    zHighlightRemoval("../images/cat1.ppm");
+    zHighlightRemoval("../images/fish.ppm");
     return 1;
 }
