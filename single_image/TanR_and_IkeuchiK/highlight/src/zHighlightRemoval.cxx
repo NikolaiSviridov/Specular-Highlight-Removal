@@ -9,7 +9,10 @@
    27(2), pp.179-193, February, 2005
 /*------------------------------*/
 
-
+//#include <filesystem>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <string>
 #include "zHighlightRemoval.h"
 
 #define SPECULARX        10
@@ -52,19 +55,15 @@ int zHighlightRemoval::zRemoveHighlights(zArray2D<s_rgbi> &img,
 
     int n = 0;
 
-//    while (epsilon >= 0.0) {
+    while (epsilon >= 0.0) {
         // run the main iteration
         printf("*");
-//        if (n % 10 == 0) {
-            zIteration(src, sfi, epsilon, true, n);
-//        } else {
-//            zIteration(src, sfi, epsilon, false, 0);
-//        }
+        zIteration(src, sfi, epsilon, true, n);
         epsilon -= step;
         printf(": %f\n", epsilon);
         ++n;
-        //zWriteImage(src,"iteration.ppm");
-//    }
+//        zWriteImage(src,"iteration.ppm");
+    }
 
     diff.zCopyIn(src);
     return 0;
@@ -125,21 +124,18 @@ int zHighlightRemoval::zSpecularFreeImage(zArray2D<s_rgbi> &src,
 }
 
 int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
-                                  float epsilon, bool save, int n) {
+                                  float epsilon, bool save, int itter) {
     int x, y;
 
     float thR = 0.1f, thG = 0.1f;
-
-    char buf[12];
 
     // to have the initial labels
     int count = zInit(src, sfi, epsilon);
     int pcount;
     zArray2D<s_rgbi> before;
-
-
-
-
+    std::string dir = "./" + std::to_string(itter) + "_itter";
+    mkdir(dir.c_str());
+    int n = 0;
     while (1) {
         before.zCopyIn(src);
 
@@ -171,7 +167,6 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                     //if it is  a boundary in the x direction
                     if (fabs(drx) > thR && fabs(dgx) > thG) { //pixel right
                         src(y, x).i = BOUNDARY;
-
 //                        before(y, x).i = BOUNDARY;
                         continue;
                     }
@@ -179,7 +174,6 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                     //if it is a noise
                     if (fabs(src(y, x).zMaxChroma() - src(y, x + 1).zMaxChroma()) < 0.01) {
                         src(y, x).i = NOISE;
-
 //                        before(y, x).i = NOISE;
                         continue;
                     }
@@ -203,7 +197,6 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
                     //if it is a boundary in the y direction
                     if (fabs(dry) > thR && fabs(dgy) > thG) { //pixel right
                         src(y, x).i = BOUNDARY;
-
 //                        before(y, x).i = BOUNDARY;
                         continue;
                     }
@@ -234,8 +227,9 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
         }
         pcount = count;
         count = zInit(src, sfi, epsilon);
-        snprintf(buf, 12, "%d_s.ppm", n);
-        save_needed(before, true, buf);
+//        snprintf(buf, 12, "%d_s.ppm", n);
+        std::string file_name = dir + "/" + std::to_string(n) + "_s.ppm";
+        save_needed(before, true, file_name);
 //        ::zShow(src);
         if (count < 0)
             break;
