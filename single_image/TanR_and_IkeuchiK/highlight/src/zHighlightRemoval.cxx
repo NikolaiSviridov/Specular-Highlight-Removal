@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <string>
 #include "zHighlightRemoval.h"
+#include <iostream>
 
 #define SPECULARX        10
 #define SPECULARY        11
@@ -23,12 +24,13 @@
 #define CAMERA_DARK        15
 
 
-zHighlightRemoval::zHighlightRemoval(char *fname) {
+zHighlightRemoval::zHighlightRemoval(basic_string<char> fname) {
     zArray2D<s_rgbi> img, diff;
+    std::cout << fname;
     ::zReadImage(fname, img);
 
-    zRemoveHighlights(img, diff);
-    ::zWriteImage(diff, "diffuse.ppm");
+    zRemoveHighlights(img, diff, fname);
+
 }
 
 zHighlightRemoval::~zHighlightRemoval() {
@@ -36,14 +38,28 @@ zHighlightRemoval::~zHighlightRemoval() {
 }
 
 int zHighlightRemoval::zRemoveHighlights(zArray2D<s_rgbi> &img,
-                                         zArray2D<s_rgbi> &diff) {
+                                         zArray2D<s_rgbi> &diff,
+                                         std::string fname) {
     // the main function to remove highlights from a single image
 
     //SPECULAR-FREE IMAGE
 
     zArray2D<s_rgbi> sfi;
     zSpecularFreeImage(img, sfi);
+    std::string filename(fname);
+    const size_t last_slash_idx = filename.find_last_of("\\/");
+    if (std::string::npos != last_slash_idx)
+    {
+        filename.erase(0, last_slash_idx + 1);
+    }
 
+// Remove extension if present.
+    const size_t period_idx = filename.rfind('.');
+    if (std::string::npos != period_idx)
+    {
+        filename.erase(period_idx);
+    }
+    ::zWriteImage(sfi, filename + "_specular_free.ppm");
 
     //ITERATIVE PART
 
@@ -66,6 +82,7 @@ int zHighlightRemoval::zRemoveHighlights(zArray2D<s_rgbi> &img,
     }
 
     diff.zCopyIn(src);
+    ::zWriteImage(diff, filename + "_diffuse.ppm");
     return 0;
 }
 
@@ -118,7 +135,6 @@ int zHighlightRemoval::zSpecularFreeImage(zArray2D<s_rgbi> &src,
         }
     }
 
-    ::zWriteImage(sfi, "specular_free.ppm");
 
     return 0;
 }
@@ -133,8 +149,8 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
     int count = zInit(src, sfi, epsilon);
     int pcount;
     zArray2D<s_rgbi> before;
-    std::string dir = "./" + std::to_string(itter) + "_itter";
-    mkdir(dir.c_str());
+//    std::string dir = "./" + std::to_string(itter) + "_itter";
+//    mkdir(dir.c_str());
     int n = 0;
     while (1) {
         before.zCopyIn(src);
@@ -228,8 +244,8 @@ int zHighlightRemoval::zIteration(zArray2D<s_rgbi> &src, zArray2D<s_rgbi> &sfi,
         pcount = count;
         count = zInit(src, sfi, epsilon);
 //        snprintf(buf, 12, "%d_s.ppm", n);
-        std::string file_name = dir + "/" + std::to_string(n) + "_s.ppm";
-        save_needed(before, true, file_name);
+//        std::string file_name = dir + "/" + std::to_string(n) + "_s.ppm";
+//        save_needed(before, true, file_name);
 //        ::zShow(src);
         if (count < 0)
             break;

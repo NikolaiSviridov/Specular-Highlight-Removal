@@ -20,7 +20,7 @@ class zHighlightRemoval
 {
   
  protected:
-  int zRemoveHighlights(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
+  int zRemoveHighlights(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff, std::string fname);
   int zSpecularFreeImage(zArray2D<s_rgbi> &img, zArray2D<s_rgbi> &diff);
 
   int zResetLabels(zArray2D<s_rgbi> &src);
@@ -32,7 +32,7 @@ class zHighlightRemoval
   void clean(zArray2D<s_rgbi> &src);
 
  public:
-  zHighlightRemoval(char *fname);
+  zHighlightRemoval(basic_string<char> fname);
   virtual ~zHighlightRemoval();
   
 };
