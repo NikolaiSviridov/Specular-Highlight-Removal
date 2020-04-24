@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+*.iml
+*.xml
+*.ppm
+*.jpg
+*.rar
+*.cmake
+*.bin
+*.make
+*.cbp
+*.log
+*.marks
+*.rsp
